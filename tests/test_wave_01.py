@@ -143,6 +143,7 @@ def test_delete_task(client, one_task):
     }
     assert Task.query.get(1) == None
 
+# ------ ALL WAVE 01 TEST PASS ------
 
 # @pytest.mark.skip(reason="No way to test this feature yet")
 def test_delete_task_not_found(client):
@@ -189,3 +190,4 @@ def test_create_task_must_contain_description(client):
         "details": "Invalid data"
     }
     assert Task.query.all() == []
+
