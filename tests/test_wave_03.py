@@ -20,11 +20,11 @@ def test_mark_complete_on_incomplete_task(client, one_task):
 
     There is no action needed here, the tests should work as-is.
     """
-    with patch("requests.post") as mock_get:
-        mock_get.return_value.status_code = 200
+    # with patch("requests.post") as mock_get:
+    #     mock_get.return_value.status_code = 200
 
         # Act
-        response = client.patch("/tasks/1/mark_complete")
+    response = client.patch("/tasks/1/mark_complete")
     response_body = response.get_json()
 
     # Assert

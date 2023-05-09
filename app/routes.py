@@ -1,4 +1,5 @@
-from flask import Blueprint, jsonify, abort, make_response, request
+from flask import Blueprint, jsonify, abort, make_response, request, current_app
+import requests
 from app import db
 from app.models.task import Task
 from datetime import datetime
@@ -100,9 +101,17 @@ def mark_complete(task_id):
     task.completed_at= datetime.now()
 
     db.session.commit()
-    return {
-            "task": task.to_dict()
-        }, 200
+    
+    
+    # Call slack api to say "Someone just completed the task <task title>."
+    url = 'https://slack.com/api/chat.postMessage'
+    myobj = {'text': f'Someone just completed the task {task.title}', 'channel': 'task-notifications'}
+
+    #use the 'headers' parameter to set the HTTP headers:
+    requests.post(url, data = myobj, headers = {"Authorization": f"Bearer {current_app.config['SLACK_API_URI']}"})
+    
+    return {"task": task.to_dict()}, 200
+    
     
 
 # WAVE 3 MARK INCOMPLETE --- PASSED
