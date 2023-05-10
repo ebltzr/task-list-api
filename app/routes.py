@@ -13,7 +13,6 @@ def validate_task(task_id):
         
     task = Task.query.get(task_id)
     
-    # 4. 
     return task if task else abort(make_response({'msg': f'No task with id: {task_id}'}, 404))
 
 task_bp = Blueprint("tasks" ,__name__, url_prefix="/tasks")
@@ -42,10 +41,8 @@ def create_task():
 @task_bp.route('', methods=['GET'])
 def get_tasks():
     response = []
-    # https://www.javatpoint.com/multi-value-query-parameters-with-flask
     sort_tasks = request.args.get("sort")
     if sort_tasks == "asc":
-        # https://sparkbyexamples.com/pyspark/pyspark-orderby-and-sort-explained/
         tasks = Task.query.order_by(Task.title.asc()).all()
     elif sort_tasks == "desc":
         tasks = Task.query.order_by(Task.title.desc()).all()
