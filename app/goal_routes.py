@@ -69,9 +69,7 @@ def update_goal(goal_id):
     request_data = request.get_json()
 
     goal.title = request_data["title"] if 'title' in request_data else goal.title
-    # goal.description = request_data["description"] if 'description' in request_data else goal.description
-    # goal.completed_at = request_data['completed_at'] if 'completed_at' in request_data else goal.completed_at
-
+   
     db.session.commit()
     return {
             "goal": goal.to_dict()
@@ -94,7 +92,6 @@ def delete_goal(goal_id):
 @goal_bp.route('/<goal_id>/mark_complete', methods=['PATCH'])
 def mark_complete(goal_id):
     goal = get_goal_from_db(goal_id)
-    # goal.completed_at= datetime.now()
 
     db.session.commit()
     
@@ -119,11 +116,10 @@ def mark_incomplete(goal_id):
 
 @goal_bp.route("/<goal_id>/tasks", methods=['POST'])
 def post_task_ids_to_goal(goal_id):
-
     goal = get_goal_from_db(goal_id)
     request_body = request.get_json()
     
-    if 'task_ids' not in request_body or isinstance(request_body['tasks_ids'], list) :
+    if 'task_ids' not in request_body:
         return {"details": "Invalid data"}, 400
     
     for task_id in request_body['task_ids']:
@@ -133,7 +129,20 @@ def post_task_ids_to_goal(goal_id):
     db.session.commit()
     
     return {
-        'id': goal_id,
+        'id': goal.goal_id,
         'task_ids': request_body['task_ids']
-    } , 201
+    } , 200
 
+@goal_bp.route("/<goal_id>/tasks", methods=['GET'])
+def get_task_ids_to_goal(goal_id):
+    goal = get_goal_from_db(goal_id)
+    
+    response = goal.to_dict()
+        # return {
+        #         "id": self.goal_id,
+        #         "title": self.title
+        #     }
+    response['tasks'] = [task.to_dict() for task in goal.tasks]
+    
+    return response, 200
+        
