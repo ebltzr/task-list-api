@@ -31,6 +31,11 @@ def create_app(test_config=None):
     from app.models.goal import Goal
     from .routes import task_bp
     from .goal_routes import goal_bp
+    
+    from flask import Blueprint
+        
+    
+    
 
     db.init_app(app)
     migrate.init_app(app, db)

@@ -5,7 +5,7 @@ from app.models.task import Task
 from datetime import datetime
 
 
-def validate_task(task_id):
+def get_task_from_db(task_id):
     try:
         task_id = int(task_id)
     except:
@@ -57,7 +57,7 @@ def get_tasks():
 
 @task_bp.route("/<task_id>", methods=['GET'])
 def get_task(task_id):
-    task = validate_task(task_id)
+    task = get_task_from_db(task_id)
     
     return {
             "task": task.to_dict()
@@ -66,7 +66,7 @@ def get_task(task_id):
 
 @task_bp.route("/<task_id>", methods=['PUT'])
 def update_task(task_id):
-    task = validate_task(task_id)
+    task = get_task_from_db(task_id)
     request_data = request.get_json()
 
     task.title = request_data["title"] if 'title' in request_data else task.title
@@ -80,7 +80,7 @@ def update_task(task_id):
 
 @task_bp.route('/<task_id>', methods=['DELETE'])
 def delete_task(task_id):
-    task_deleted = validate_task(task_id)
+    task_deleted = get_task_from_db(task_id)
     
     db.session.delete(task_deleted)
     db.session.commit()
@@ -91,30 +91,25 @@ def delete_task(task_id):
         }
     
 
-# WAVE 3 - MARK COMPLETE --- PASSED
 @task_bp.route('/<task_id>/mark_complete', methods=['PATCH'])
 def mark_complete(task_id):
-    task = validate_task(task_id)
+    task = get_task_from_db(task_id)
     task.completed_at= datetime.now()
 
     db.session.commit()
     
     
-    # Call slack api to say "Someone just completed the task <task title>."
     url = 'https://slack.com/api/chat.postMessage'
     myobj = {'text': f'Someone just completed the task {task.title}', 'channel': 'task-notifications'}
 
-    #use the 'headers' parameter to set the HTTP headers:
     requests.post(url, data = myobj, headers = {"Authorization": f"Bearer {current_app.config['SLACK_API_URI']}"})
     
     return {"task": task.to_dict()}, 200
     
     
-
-# WAVE 3 MARK INCOMPLETE --- PASSED
 @task_bp.route('/<task_id>/mark_incomplete', methods=['PATCH'])
 def mark_incomplete(task_id):
-    task = validate_task(task_id)
+    task = get_task_from_db(task_id)
     task.completed_at = None
     
     db.session.commit()

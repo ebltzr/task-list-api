@@ -1,14 +1,14 @@
 from flask import Blueprint, jsonify, abort, make_response, request, current_app
 import requests
 from app import db
-# from datetime import datetime
 
 from app.models.goal import Goal
+from .routes import get_task_from_db
 
 
 goal_bp = Blueprint("goals", __name__, url_prefix="/goals")
 
-def validate_goal(goal_id):
+def get_goal_from_db(goal_id):
     try:
         goal_id = int(goal_id)
     except:
@@ -16,7 +16,7 @@ def validate_goal(goal_id):
         
     goal = Goal.query.get(goal_id)
 
-    return goal if goal else abort(make_response({'msg': f'No {Goal.__name__} with id: {goal_id}'}, 404))
+    return goal if goal else abort(make_response({'msg': f'No Goal with id: {goal_id}'}, 404))
 
 
 
@@ -29,9 +29,6 @@ def create_goal():
     
     new_goal = Goal(
         title = request_body['title']
-        # description = request_body['description'],
-        # completed_at = request_body['completed_at'] if 'completed_at' in 
-        #                 request_body else None
     )
     
     db.session.add(new_goal)
@@ -59,7 +56,7 @@ def get_goals():
 
 @goal_bp.route("/<goal_id>", methods=['GET'])
 def get_goal(goal_id):
-    goal = validate_goal(goal_id)
+    goal = get_goal_from_db(goal_id)
     
     return {
             "goal": goal.to_dict()
@@ -68,7 +65,7 @@ def get_goal(goal_id):
 
 @goal_bp.route("/<goal_id>", methods=['PUT'])
 def update_goal(goal_id):
-    goal = validate_goal(goal_id)
+    goal = get_goal_from_db(goal_id)
     request_data = request.get_json()
 
     goal.title = request_data["title"] if 'title' in request_data else goal.title
@@ -82,7 +79,7 @@ def update_goal(goal_id):
 
 @goal_bp.route('/<goal_id>', methods=['DELETE'])
 def delete_goal(goal_id):
-    goal_deleted = validate_goal(goal_id)
+    goal_deleted = get_goal_from_db(goal_id)
     
     db.session.delete(goal_deleted)
     db.session.commit()
@@ -96,7 +93,7 @@ def delete_goal(goal_id):
 # WAVE 3 - MARK COMPLETE --- PASSED
 @goal_bp.route('/<goal_id>/mark_complete', methods=['PATCH'])
 def mark_complete(goal_id):
-    goal = validate_goal(goal_id)
+    goal = get_goal_from_db(goal_id)
     # goal.completed_at= datetime.now()
 
     db.session.commit()
@@ -111,7 +108,7 @@ def mark_complete(goal_id):
 
 @goal_bp.route('/<goal_id>/mark_incomplete', methods=['PATCH'])
 def mark_incomplete(goal_id):
-    goal = validate_goal(goal_id)
+    goal = get_goal_from_db(goal_id)
     goal.completed_at = None
     
     db.session.commit()
@@ -119,3 +116,24 @@ def mark_incomplete(goal_id):
             "goal": goal.to_dict()
         }, 200
     
+
+@goal_bp.route("/<goal_id>/tasks", methods=['POST'])
+def post_task_ids_to_goal(goal_id):
+
+    goal = get_goal_from_db(goal_id)
+    request_body = request.get_json()
+    
+    if 'task_ids' not in request_body or isinstance(request_body['tasks_ids'], list) :
+        return {"details": "Invalid data"}, 400
+    
+    for task_id in request_body['task_ids']:
+        task = get_task_from_db(task_id)
+        task.goal = goal
+
+    db.session.commit()
+    
+    return {
+        'id': goal_id,
+        'task_ids': request_body['task_ids']
+    } , 201
+
